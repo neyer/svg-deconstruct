@@ -9,7 +9,7 @@ import lazyopt
 import functools
 
 FILE_NAME="cc_iStock-478639870_16x9.svg"
-NUM_SHAPES = 100
+NUM_SHAPES = 100000
 
 
 class Shape(object):
@@ -111,11 +111,10 @@ def PrintSVGFileContents(shapes):
       if new_centroid is None:
         new_centroid = shape.radius*FUDGE_FACTOR+shape.radius*1j*FUDGE_FACTOR
       else:
-        # shift the centroid to the right and down accordingly
-        this_radius = shape.radius
-        new_centroid = new_centroid.real+this_radius + new_centroid.imag*1j
-        if new_centroid.real > DOC_WIDTH:
-          new_centroid = this_radius + new_centroid.imag+this_radius*1j
+        # shift the centroid all the way to the left, and down accordingly
+        new_centroid = new_centroid.real+shape.radius*2*FUDGE_FACTOR + new_centroid.imag*1j
+        if new_centroid.real+shape.radius > DOC_WIDTH:
+          new_centroid = shape.radius + new_centroid.imag+shape.radius*FUDGE_FACTOR*2j
           
       print ('<path d="{}" fill="{}"/>'.format(
           shape.get_shifted_path(new_centroid).d(),
@@ -137,7 +136,6 @@ def ReadFile(file_name):
       shapes.append(shape)
       if len(shapes) == NUM_SHAPES:
         break
-
   PrintSVGFileContents(sorted(shapes, key=lambda shape: shape.radius))
 
 if __name__ == '__main__':
