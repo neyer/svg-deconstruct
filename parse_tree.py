@@ -9,7 +9,7 @@ import lazyopt
 import functools
 
 FILE_NAME="cc_iStock-478639870_16x9.svg"
-NUM_SHAPES = 1000
+NUM_SHAPES = 100
 
 
 class Shape(object):
@@ -102,17 +102,23 @@ SVG_HEADER = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1280 1280" width="1280.0pt" height="1280.0pt">"""
 DOC_WIDTH = 1280
 DOC_HEIGHT = 720
-
-def GetCentroidForShapeNum(shape_num):
-  y_value = shape_num / 50
-  x_value = shape_num % 50
-  return 128*x_value + y_value*72j
+FUDGE_FACTOR = 1.1
 
 def PrintSVGFileContents(shapes):
   print (SVG_HEADER)
-  for shapeno, shape in zip(range(len(shapes)), shapes):
+  new_centroid = None
+  for shape in shapes:
+      if new_centroid is None:
+        new_centroid = shape.radius*FUDGE_FACTOR+shape.radius*1j*FUDGE_FACTOR
+      else:
+        # shift the centroid to the right and down accordingly
+        this_radius = shape.radius
+        new_centroid = new_centroid.real+this_radius + new_centroid.imag*1j
+        if new_centroid.real > DOC_WIDTH:
+          new_centroid = this_radius + new_centroid.imag+this_radius*1j
+          
       print ('<path d="{}" fill="{}"/>'.format(
-          shape.get_shifted_path(GetCentroidForShapeNum(shapeno)).d(),
+          shape.get_shifted_path(new_centroid).d(),
           shape.fill_color))
   print ("</svg>")
 
