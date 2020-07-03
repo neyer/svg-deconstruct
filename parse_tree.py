@@ -9,7 +9,7 @@ import lazyopt
 import functools
 
 FILE_NAME="cc_iStock-478639870_16x9.svg"
-NUM_SHAPES = 100
+NUM_SHAPES = 1000
 
 
 class Shape(object):
@@ -25,23 +25,23 @@ class Shape(object):
     for e in self.path:
       if isinstance(e, Line):
           if not line_points:
-            line_points.append((e.start.real,e.start.imag))
-          line_points.append((e.end.real,e.end.imag))
+            line_points.append(e.start)
+          line_points.append(e.end)
       elif isinstance(e, CubicBezier):
           if not line_points:
-            line_points.append((e.start.real,e.start.imag))
+            line_points.append(e.start)
           point_num = 1
           while True:
             point_name = 'control{}'.format(point_num)
             if hasattr(e, point_name):
               point_value = getattr(e, point_name)
-              line_points.append((point_value.real, point_value.imag))
+              line_points.append(point_value)
               point_num += 1
             else: 
               break
-          line_points.append((e.end.real,e.end.imag))
+          line_points.append(e.end)
       elif isinstance(e, Move):
-        line_points.append((e.start.real,e.start.imag))
+        line_points.append(e.start)
       elif isinstance(e, Close):
         pass
       else:
@@ -52,13 +52,22 @@ class Shape(object):
   @property
   @functools.lru_cache(None)
   def centroid(self):
-    sum_x = 0
-    sum_y = 0
+    sum = 0+0j
     num_points = len(self.line_points)
     for point in self.line_points:
-      sum_x += point[0]
-      sum_y += point[1]
-    return sum_x/num_points + (sum_y/num_points)*1j
+      sum += point
+    return sum/num_points
+
+  @property
+  @functools.lru_cache(None)
+  def radius(self):
+    
+    max_delta = 0
+    for point in self.line_points:
+      this_delta = abs(point-self.centroid) 
+      max_delta = max(max_delta, this_delta)
+    return max_delta
+
 
   def get_shifted_path(self, new_centroid):
     "Returns a version of the path with a new centroid location"
@@ -90,13 +99,13 @@ class Shape(object):
 
 SVG_HEADER = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1280 720" width="1280.0pt" height="720.0pt">"""
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1280 1280" width="1280.0pt" height="1280.0pt">"""
 DOC_WIDTH = 1280
 DOC_HEIGHT = 720
 
 def GetCentroidForShapeNum(shape_num):
-  y_value = shape_num / 20
-  x_value = shape_num % 20
+  y_value = shape_num / 50
+  x_value = shape_num % 50
   return 128*x_value + y_value*72j
 
 def PrintSVGFileContents(shapes):
@@ -123,7 +132,7 @@ def ReadFile(file_name):
       if len(shapes) == NUM_SHAPES:
         break
 
-  PrintSVGFileContents(shapes)
+  PrintSVGFileContents(sorted(shapes, key=lambda shape: shape.radius))
 
 if __name__ == '__main__':
   lazyopt.apply_all()
