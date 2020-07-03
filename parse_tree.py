@@ -114,7 +114,9 @@ def PrintSVGFileContents(shapes):
         # shift the centroid all the way to the left, and down accordingly
         new_centroid = new_centroid.real+shape.radius*2*FUDGE_FACTOR + new_centroid.imag*1j
         if new_centroid.real+shape.radius > DOC_WIDTH:
-          new_centroid = shape.radius + new_centroid.imag+shape.radius*FUDGE_FACTOR*2j
+          print ('<!--new line! radius {}, old imag {}-->'.format(shape.radius, new_centroid.imag))
+
+          new_centroid = shape.radius + (new_centroid.imag+shape.radius*FUDGE_FACTOR)*1j
           
       print ('<path d="{}" fill="{}"/>'.format(
           shape.get_shifted_path(new_centroid).d(),
