@@ -5,17 +5,28 @@
 from svg.path import parse_path
 from svg.path.path import Line, CubicBezier, Move, Close, Path
 from xml.dom import minidom
+import colorsys
 import lazyopt
 import functools
 
-FILE_NAME="cc_iStock-478639870_16x9.svg"
+FILE_NAME="wide.svg"
 NUM_SHAPES = 100000
 
 
 class Shape(object):
   def __init__(self, path, fill_color):
     self.path = path
-    self.fill_color = fill_color
+    self.fill_color_html = fill_color
+    r = int(fill_color[1:3],16)
+    g = int(fill_color[3:5],16)
+    b = int(fill_color[5:7],16)
+    self.color_rgb = (r,g,b)
+
+  @property
+  @functools.lru_cache(None)
+  def color_hls(self):
+    r,g,b = self.color_rgb
+    return colorsys.rgb_to_hls(r/256.0, g/256.0, b/256.0)
 
   @property
   @functools.lru_cache(None)
@@ -68,10 +79,8 @@ class Shape(object):
       max_delta = max(max_delta, this_delta)
     return max_delta
 
-
   def get_shifted_path(self, new_centroid):
     "Returns a version of the path with a new centroid location"
-    
     delta = new_centroid - self.centroid
     out_path = Path()
     for e in self.path:
@@ -97,30 +106,48 @@ class Shape(object):
         raise ValueError(e)
     return out_path
 
+DOC_WIDTH = 1280
+DOC_HEIGHT = 4000
 SVG_HEADER = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1280 1280" width="1280.0pt" height="1280.0pt">"""
-DOC_WIDTH = 1280
-DOC_HEIGHT = 720
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 {width} {height}" width="{width}.0pt" height="{height}.0pt">""".format(width=DOC_WIDTH,height=DOC_HEIGHT)
 FUDGE_FACTOR = 1.1
 
 def PrintSVGFileContents(shapes):
   print (SVG_HEADER)
-  new_centroid = None
+
+  # group the shapes into rows
+  this_row_shapes = []
+  current_x = 0
+  current_y = 0
   for shape in shapes:
-      if new_centroid is None:
-        new_centroid = shape.radius*FUDGE_FACTOR+shape.radius*1j*FUDGE_FACTOR
+      if (current_x == 0):
+        current_x += shape.radius
+      else:
+        current_x += shape.radius*2*FUDGE_FACTOR
+
+      if current_x < DOC_WIDTH:
+        this_row_shapes.append(shape)
       else:
         # shift the centroid all the way to the left, and down accordingly
-        new_centroid = new_centroid.real+shape.radius*2*FUDGE_FACTOR + new_centroid.imag*1j
-        if new_centroid.real+shape.radius > DOC_WIDTH:
-          print ('<!--new line! radius {}, old imag {}-->'.format(shape.radius, new_centroid.imag))
+        # sort the shapes in this row by color
+        to_draw = sorted(this_row_shapes, key=lambda shape: shape.color_hls[1])
+        current_x = 0
+        for draw_shape in to_draw:
+          if (current_x == 0):
+            current_x += draw_shape.radius
+          else:
+            current_x += draw_shape.radius*2*FUDGE_FACTOR
+          new_centroid = current_x + current_y*1j
+          print ('<path d="{}" fill="{}"/>'.format(draw_shape.get_shifted_path(new_centroid).d(),
+                 draw_shape.fill_color_html))
 
-          new_centroid = shape.radius + (new_centroid.imag+shape.radius*FUDGE_FACTOR)*1j
-          
-      print ('<path d="{}" fill="{}"/>'.format(
-          shape.get_shifted_path(new_centroid).d(),
-          shape.fill_color))
+        # prepare for a new row
+        print ('<!--new line! radius {}, old imag {}-->'.format(shape.radius, new_centroid.imag))
+        current_y +=  max([row_shape.radius for row_shape in this_row_shapes])*FUDGE_FACTOR*2
+        current_x = 0
+        # we ended the row by encountering this shape, which was too big to fit
+        this_row_shapes = [shape]
   print ("</svg>")
 
 def ReadFile(file_name):
