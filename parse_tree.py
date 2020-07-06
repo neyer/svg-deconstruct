@@ -9,7 +9,7 @@ import colorsys
 import lazyopt
 import functools
 
-FILE_NAME="wide.svg"
+FILE_NAME="self.svg"
 NUM_SHAPES = 100000
 
 
