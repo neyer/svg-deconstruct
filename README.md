@@ -13,10 +13,9 @@ Into
 I took a few drawing classes online, and these classes caused me to notice more of the beauty already around me. I started to view trees more as visual objects, pure creations of simple concepts like, color, and shape. Trees are _incredible_ works of art, when viewed only in terms of how they use these basic forms.
 
 For example, consider line.  The only things that characterize a line are its angle and width. When I looked at how a tree 'uses' lines, I noticed that there is a wide distribution of line widths. The trunk is a very wide line, branches get increasingly smaller, until we get to twigs, and even the veins in the leaf of a tree.  The bigger lines
-tend to have very restricted angles - the trunk usually goes straigth up. As lines get smaller and smaller, they start to every which way.
+tend to have very restricted angles - the trunk usually goes straight up. As lines get smaller and smaller, they start to go every which way.
 
-I was really hoping to see what this woudl actually look like. As a first pass, I thought i'd try breaking up an SVG image of a tree. I naively thought that the svg image would be
-a rough approximation of the tree's geometry, but this turns out to not be the case.
+I was really hoping to see what this distribution of line angles by width would actually look like. As a first pass, I thought i'd try breaking up an SVG image of a tree. I naively thought that the svg image would be a rough approximation of the tree's geometry, but this turns out to not be the case.
 
 I still haven't gotten to see what I actually watned to see, but now I have found one approach that didn't work - although it did make some neat pictures.
 
