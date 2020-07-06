@@ -22,7 +22,7 @@ I still haven't gotten to see what I actually watned to see, but now I have foun
 # How to use it
 This uses python 3, and you'll need to install the libraries requirements.txt using pip. Run the program
 
-`python parse_tree.py --file_name any-svg-file.svg > output-here.svg"`
+`python parse_tree.py --file_name any-svg-file.svg > output-here.svg`
 
 The program may through an error if it encounters svg path elements different from the ones in the test images i used. 
 
